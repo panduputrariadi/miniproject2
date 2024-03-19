@@ -364,7 +364,7 @@ func main() {
 	// pilihanMenu := 0
 	var pilihanMenu int
 	fmt.Println("=================================")
-	fmt.Println("Sistem Manajemen Pesanan Restoran")
+	fmt.Println("Sistem Manajemen Perpustakaan")
 	fmt.Println("=================================")
 	fmt.Println("Silahkan Pilih : ")
 	fmt.Println("1. Tambah Buku")
