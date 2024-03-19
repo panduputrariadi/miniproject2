@@ -251,82 +251,66 @@ func editBuku() {
 	fmt.Print("Masukkan kode buku yang ingin diedit: ")
 	fmt.Scanln(&kodeBuku)
 
-	for i, buku := range DaftarBuku {
-		if buku.KodeBuku == kodeBuku {
-			found = true
-			fmt.Printf("Masukkan data baru untuk buku dengan kode buku %s:\n", kodeBuku)
-
-			inputUser := bufio.NewReader(os.Stdin)
-
-			fmt.Print("Judul Buku: ")
-			judulBuku, _ := inputUser.ReadString('\n')
-			judulBuku = strings.TrimSpace(judulBuku)
-
-			fmt.Print("Pengarang: ")
-			pengarang, _ := inputUser.ReadString('\n')
-			pengarang = strings.TrimSpace(pengarang)
-
-			fmt.Print("Penerbit: ")
-			penerbit, _ := inputUser.ReadString('\n')
-			penerbit = strings.TrimSpace(penerbit)
-
-			fmt.Print("Jumlah Halaman: ")
-			fmt.Scanln(&buku.JumlahHalaman)
-
-			fmt.Print("Tahun Terbit: ")
-			fmt.Scanln(&buku.TahunTerbit)
-
-			// Update data buku
-			DaftarBuku[i] = Perpustakaan{
-				KodeBuku:      kodeBuku,
-				Judulbuku:     judulBuku,
-				Pengarang:     pengarang,
-				Penerbit:      penerbit,
-				JumlahHalaman: buku.JumlahHalaman,
-				TahunTerbit:   buku.TahunTerbit,
-			}
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-			chErr := make(chan error)
-
-			go updateJSONFile(DaftarBuku, &wg, chErr)
-
-			go func() {
-				wg.Wait()
-				close(chErr)
-			}()
-
-			for err := range chErr {
-				fmt.Println("Terjadi error saat mengupdate JSON:", err)
-				return
-			}
-
-			fmt.Println("Buku berhasil diupdate.")
-			break
-		}
-	}
-
-	if !found {
-		fmt.Println("Buku dengan kode buku", kodeBuku, "tidak ditemukan.")
-	}
-}
-
-func updateJSONFile(books []Perpustakaan, wg *sync.WaitGroup, chErr chan error) {
-	defer wg.Done()
-
-	dataJSON, err := json.Marshal(books)
+	// Membaca data buku dari file JSON
+	data, err := os.ReadFile(fmt.Sprintf("perpustakaan/%s.json", kodeBuku))
 	if err != nil {
-		chErr <- err
+		fmt.Println("Terjadi error:", err)
 		return
 	}
 
-	err = os.WriteFile("perpustakaan.json", dataJSON, 0644)
+	var buku Perpustakaan
+	err = json.Unmarshal(data, &buku)
 	if err != nil {
-		chErr <- err
+		fmt.Println("Terjadi error:", err)
 		return
 	}
+
+	fmt.Printf("Data Buku Ditemukan:\nKode Buku: %s, Judul Buku: %s, Pengarang: %s, Penerbit: %s, Jumlah Halaman: %d, Tahun Terbit: %d\n",
+		buku.KodeBuku, buku.Judulbuku, buku.Pengarang, buku.Penerbit, buku.JumlahHalaman, buku.TahunTerbit)
+
+	// Meminta input untuk data baru
+	fmt.Println("Masukkan data baru untuk buku dengan kode buku", kodeBuku, ":")
+	inputUser := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Judul Buku: ")
+	judulBuku, _ := inputUser.ReadString('\n')
+	judulBuku = strings.TrimSpace(judulBuku)
+
+	fmt.Print("Pengarang: ")
+	pengarang, _ := inputUser.ReadString('\n')
+	pengarang = strings.TrimSpace(pengarang)
+
+	fmt.Print("Penerbit: ")
+	penerbit, _ := inputUser.ReadString('\n')
+	penerbit = strings.TrimSpace(penerbit)
+
+	fmt.Print("Jumlah Halaman: ")
+	fmt.Scanln(&buku.JumlahHalaman)
+
+	fmt.Print("Tahun Terbit: ")
+	fmt.Scanln(&buku.TahunTerbit)
+
+	// Update data buku
+	buku.Judulbuku = judulBuku
+	buku.Pengarang = pengarang
+	buku.Penerbit = penerbit
+
+	// Simpan data baru ke file JSON
+	dataJSON, err := json.Marshal(buku)
+	if err != nil {
+		fmt.Println("Terjadi error saat marshaling data JSON:", err)
+		return
+	}
+
+	err = os.WriteFile(fmt.Sprintf("perpustakaan/%s.json", kodeBuku), dataJSON, 0644)
+	if err != nil {
+		fmt.Println("Terjadi error saat menulis ke file JSON:", err)
+		return
+	}
+
+	fmt.Println("Buku berhasil diupdate.", found)
 }
+
 
 func GeneratePdfBuku() {
 	fmt.Println("=================================")
