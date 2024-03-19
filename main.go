@@ -38,7 +38,7 @@ func tambahBuku() {
 			fmt.Print("terjadi error: ", err)
 			return
 		}
-		kodeBuku = strings.Replace(kodeBuku, "\n", "", 1)
+		kodeBuku = strings.TrimSpace(kodeBuku)
 
 		fmt.Print("Silahkan tambah judul buku: ")
 		judulBuku, err := inputUser.ReadString('\n')
@@ -149,7 +149,8 @@ func simpanBuku(ch <-chan Perpustakaan, wg *sync.WaitGroup, noStaff int) {
 func bacaDaftarBuku(ch <-chan string, chPerpustakaan chan Perpustakaan, wg *sync.WaitGroup) {
 	var daftarBuku Perpustakaan
 	for kodeDaftarBuku := range ch {
-		dataJson, err := os.ReadFile(fmt.Sprintf("Dafta Buku %s", kodeDaftarBuku))
+		dataJson, err := os.ReadFile(fmt.Sprintf("perpustakaan/%s", kodeDaftarBuku))
+
 		if err != nil {
 			fmt.Println("Terjadi error:", err)
 		}
